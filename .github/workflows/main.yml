@@ -1,0 +1,76 @@
+name: "Main"
+
+# Only trigger if we changed the files used in the image
+on:
+  workflow_dispatch:
+  pull_request:
+    - opened
+    - reopened
+  push:
+    tags: ['v*']
+    paths:
+      - 'remote_shell.sh'
+      - 'Dockerfile'
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+permissions:
+  id-token: write
+  contents: read
+  packages: write
+  releases: write
+
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          role-to-assume: ${{ secrets.CLOUD87_ECR_PUSH_ROLE_ARN }}
+          role-session-name: Cloud87DockerRemoteShellGHA
+          aws-region: us-east-1
+
+      - name: Login to Container Registry
+        if: "startsWith(github.ref, 'refs/tags/v')"
+        uses: docker/login-action@v2
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ github.token }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+
+      - name: Setup up Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Build Push
+        uses: docker/build-push-action@v3
+        with:
+          context: .
+          push: startsWith(github.ref, 'refs/tags/v')
+          platforms: linux/amd64,linux/arm64
+          tags: |
+            ${{ steps.login-ecr.outputs.registry }}/cloud87/remote-shell:${{ GITHUB_REF_NAME }}
+            ${{ env.REGISTRY }}/${{env.IMAGE_NAME}}:${{ GITHUB_REF_NAME }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      
+
+      - name: Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v1
+
