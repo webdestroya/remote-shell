@@ -4,8 +4,9 @@ name: "Main"
 on:
   workflow_dispatch:
   pull_request:
-    - opened
-    - reopened
+    types:
+      - opened
+      - reopened
   push:
     tags: ['v*']
     paths:
