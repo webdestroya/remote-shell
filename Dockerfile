@@ -56,12 +56,20 @@ RUN set -eux; \
   cd /usr/src/dropbear; \
   \
   { \
+    echo '#define DROPBEAR_DEFPORT "8722"'; \
+    echo '#define DISABLE_SYSLOG 1'; \
     echo '#define DROPBEAR_SVR_PASSWORD_AUTH 0'; \
     echo '#define DROPBEAR_SFTPSERVER 0'; \
     echo '#define DROPBEAR_DSS 0'; \
     echo '#define DROPBEAR_SVR_AGENTFWD 0'; \
     echo '#define DROPBEAR_SVR_LOCALTCPFWD 0'; \
     echo '#define DROPBEAR_SVR_REMOTETCPFWD 0'; \
+    echo '#define DROPBEAR_SHA1_HMAC 0'; \
+    echo '#define DO_MOTD 0'; \
+    echo '#define DSS_PRIV_FILENAME "/tmp/c87rs_dss_host_key"'; \
+    echo '#define RSA_PRIV_FILENAME "/tmp/c87rs_rsa_host_key"'; \
+    echo '#define ECDSA_PRIV_FILENAME "/tmp/c87rs_ecdsa_host_key"'; \
+    echo '#define ED25519_PRIV_FILENAME "/tmp/c87rs_ed25519_host_key"'; \
   } > localoptions.h; \
   \
   autoconf; \

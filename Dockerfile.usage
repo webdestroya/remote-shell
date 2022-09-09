@@ -1,4 +1,4 @@
-FROM cloud87/remote-shell:master AS cloud87rs
+FROM cloud87/remote-shell:latest AS cloud87rs
 
 FROM ruby:3.1.2-slim
 

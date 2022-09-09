@@ -1,11 +1,44 @@
 #!/bin/sh
 
-set -eu
+set -e
 
-# override with env var, else use default
-maxruntime=${C87_CONSOLE_MAX_RUNTIME-43200}
+script_path=$(realpath $0)
+script_dir=$(dirname $script_path)
 
-githubuser=${C87_CONSOLE_GH_USER-webdestroya}
+echo "Assuming Cloud87 Remote shell folder of: ${script_dir}"
+echo ""
+
+while getopts u:p:i:k:m: flag
+do
+  case "${flag}" in
+    u) opt_github=${OPTARG};;
+    p) opt_port=${OPTARG};;
+    i) opt_idletimeout=${OPTARG};;
+    k) opt_keepalive=${OPTARG};;
+    m) opt_maxruntime=${OPTARG};;
+  esac
+done
+
+db_idle_timeout=${opt_idletimeout-${C87_RSHELL_IDLE_TIMEOUT-0}}
+db_keepalive=${opt_keepalive-${C87_RSHELL_KEEPALIVE-300}}
+db_port=${opt_port-${C87_RSHELL_PORT-8722}}
+maxruntime=${opt_maxruntime-${C87_RSHELL_MAX_RUNTIME-43200}}
+githubuser=${opt_github-$C87_RSHELL_GH_USER}
+
+
+if [ -z "$githubuser" ]; then
+  echo "ERROR: GitHub username not provided!"
+  exit 1;
+fi
+
+echo "GitHub User:  ${githubuser}"
+echo "Port:         ${db_port}"
+echo "Idle Timeout: ${db_idle_timeout}"
+echo "Keepalive:    ${db_keepalive}"
+echo "Max Runtime:  ${maxruntime}"
+
+set -u
+set -o pipefail
 
 mkdir -p $HOME/.ssh
 chmod 0600 $HOME/.ssh
@@ -22,7 +55,7 @@ echo "export \$(cat ${HOME}/.ssh/environment | sed 's/#.*//g' | xargs)" >> $HOME
 # setup the authorized keys
 echo "" >> $HOME/.ssh/authorized_keys
 
-curl -sSL https://api.github.com/users/${githubuser}/keys | jq -rcM ".[] | .key" >> $HOME/.ssh/authorized_keys
+curl -sSL https://api.github.com/users/${githubuser}/keys | ${script_dir}/jq -rcM ".[] | .key" >> $HOME/.ssh/authorized_keys
 echo "" >> $HOME/.ssh/authorized_keys
 chmod 0600 $HOME/.ssh/authorized_keys
 
@@ -32,4 +65,7 @@ echo "cd $(pwd)" >> $HOME/.bashrc
 timeout \
   --preserve-status \
   --kill-after=10s ${maxruntime} \
-    /cloud87/dropbear -F -E -s -g -j -k -p 6000
+    ${script_dir}/dropbear -F -E -R \
+      -I ${db_idle_timeout} \
+      -K ${db_keepalive} \
+      -p ${db_port}
