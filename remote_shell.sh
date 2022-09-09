@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 set -e
 
@@ -42,6 +42,7 @@ set -o pipefail
 
 mkdir -p $HOME/.ssh
 chmod 0600 $HOME/.ssh
+mkdir -p /etc/dropbear
 
 
 # to ensure that the environment is properly loaded
@@ -59,13 +60,17 @@ curl -sSL https://api.github.com/users/${githubuser}/keys | ${script_dir}/jq -rc
 echo "" >> $HOME/.ssh/authorized_keys
 chmod 0600 $HOME/.ssh/authorized_keys
 
+echo "Authorized Keys:"
+cat $HOME/.ssh/authorized_keys
+
+
 echo "" >> $HOME/.bashrc
 echo "cd $(pwd)" >> $HOME/.bashrc
 
 timeout \
   --preserve-status \
   --kill-after=10s ${maxruntime} \
-    ${script_dir}/dropbear -F -E -R \
+    ${script_dir}/dropbear -v -F -R -s -g \
       -I ${db_idle_timeout} \
       -K ${db_keepalive} \
       -p ${db_port}

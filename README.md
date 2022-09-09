@@ -38,7 +38,7 @@ COPY --from=ghrc.io/webdestroya/docker-remote-shell:v1 /cloud87 /cloud87
 Then you can launch the container:
 
 ```
-$ docker run --rm -p 8722:8722 myapp:latest /cloud87/remote_shell -u your-github-username
+$ docker run --rm -p 8722:8722 myapp:latest /cloud87/remote_shell_init -u your-github-username
 ```
 
 
