@@ -1,9 +1,15 @@
 FROM ubuntu
 
 RUN apt-get update \
-  && apt-get install -y --no-install-recommends curl ca-certificates \
+  && apt-get install -y --no-install-recommends \
+#    curl \
+#    ca-certificates \
+#    vim \
+    strace \
+    \
   && rm -rf /var/lib/apt/lists/*
 
 COPY --from=cloud87/remote-shell:latest /cloud87 /cloud87
 
+# strace -f -F -o logfile -s 300 dropbear -vFE
 
