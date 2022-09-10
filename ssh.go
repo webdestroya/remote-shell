@@ -30,16 +30,13 @@ func dismissSessionHandler(options RemoteShellOptions, s ssh.Session) {
 }
 
 func sessionHandler(options RemoteShellOptions, notify chan bool, s ssh.Session) {
-	// defer close(notify)
-	// defer (notify <- true)
-
 	// log.Printf("SESSION RAWCOMMAND: %s\n", s.RawCommand())
 	// log.Printf("SESSION SUBSYTEM: %s\n", s.Subsystem())
-	log.Printf("SESSION User (requested): %s\n", s.User())
-	log.Printf("SESSION RemoteIP: %s\n", s.RemoteAddr().String())
-	log.Printf("SESSION ClientVersion: %s\n", s.Context().ClientVersion())
-	log.Printf("SESSION ServerVersion: %s\n", s.Context().ServerVersion())
-	log.Printf("SESSION SessionID: %s\n", s.Context().SessionID())
+	log.Printf("Session User (requested): %s\n", s.User())
+	log.Printf("Session RemoteIP: %s\n", s.RemoteAddr().String())
+	log.Printf("Session ClientVersion: %s\n", s.Context().ClientVersion())
+	log.Printf("Session ServerVersion: %s\n", s.Context().ServerVersion())
+	log.Printf("Session SessionID: %s\n", s.Context().SessionID())
 
 	io.WriteString(s, fmt.Sprintf("Hello %s\n", s.User()))
 
@@ -94,6 +91,10 @@ func openSSHSocket(options RemoteShellOptions) net.Listener {
 func startSSHService(options RemoteShellOptions) {
 	publicKeys := exportAuthorizedKeys(options)
 
+	if len(publicKeys) == 0 {
+		log.Fatalf("The user '%s' does not have any public keys!\n", options.username)
+	}
+
 	log.Println("Starting SSH Service")
 
 	notificationChannel := make(chan bool)
@@ -136,7 +137,6 @@ func startSSHService(options RemoteShellOptions) {
 	}
 
 	server := &ssh.Server{
-		// Addr:                          connAddr,
 		Version:                       "Cloud87",
 		PublicKeyHandler:              pubKeyAuthHandle,
 		PasswordHandler:               nil,

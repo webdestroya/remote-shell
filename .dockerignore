@@ -1,0 +1,8 @@
+.github
+.git
+.gitignore
+.tool-versions
+Makefile
+README.md
+remote_shell
+tryssh.sh

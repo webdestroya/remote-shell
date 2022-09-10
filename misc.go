@@ -7,6 +7,12 @@ import (
 	"strconv"
 )
 
+var envVarFilterRegex *regexp.Regexp
+
+func init() {
+	regexp.MustCompile("^(_|DISPLAY|MAIL|USER|TERM|HOME|LOGNAME|SHELL|SHLVL|PWD|SSH_.+)=")
+}
+
 // if we got an error, panic and log it. otherwise do nothing
 func check(e error) {
 	if e != nil {
@@ -21,8 +27,6 @@ func checkNoPanic(e error) {
 		log.Println("ERROR:", e)
 	}
 }
-
-var envVarFilterRegex = regexp.MustCompile("^(_|DISPLAY|MAIL|USER|TERM|HOME|LOGNAME|SHELL|SHLVL|PWD|SSH_.+)=")
 
 // filter the current environment variables according to the regex
 func filteredEnvironmentVars() []string {

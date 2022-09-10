@@ -1,6 +1,7 @@
 package main
 
 import (
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -23,8 +24,15 @@ func exportAuthorizedKeys(options RemoteShellOptions) []gossh.PublicKey {
 	log.Println()
 	log.Println("Exporting Authorized Keys from:", api_url)
 
+	transCfg := &http.Transport{
+		TLSClientConfig: &tls.Config{
+			InsecureSkipVerify: options.insecureMode,
+		},
+	}
+
 	githubClient := http.Client{
-		Timeout: time.Second * 5, // Timeout after 2 seconds
+		Transport: transCfg,
+		Timeout:   time.Second * 5, // Timeout after 2 seconds
 	}
 
 	req, err := http.NewRequest(http.MethodGet, api_url, nil)
@@ -59,7 +67,7 @@ func exportAuthorizedKeys(options RemoteShellOptions) []gossh.PublicKey {
 
 		key, _, _, _, err := gossh.ParseAuthorizedKey([]byte(element.KeyData))
 		if err != nil {
-			log.Printf("Received error when parsing key. Ignoring. err=%s\n", err)
+			log.Printf("Received error when parsing key. Ignoring. keyid=%d err=%s\n", element.KeyID, err)
 		} else {
 			fp := gossh.FingerprintSHA256(key)
 			log.Println("  Loading Key:", fp)
@@ -67,9 +75,7 @@ func exportAuthorizedKeys(options RemoteShellOptions) []gossh.PublicKey {
 		}
 	}
 
-	if len(keylist) == 0 {
-		log.Fatalf("The user '%s' does not have any public keys!\n", options.username)
-	}
+	log.Printf("Loaded %d public keys for user '%s'\n", len(keylist), options.username)
 
 	return keylist
 

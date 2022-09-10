@@ -6,25 +6,13 @@ buildtest:
 
 runtest:
 	# docker run --rm -p 8722:8722 --privileged -it cloud87/shelltest:latest /bin/bash
-	docker run --rm -p 8722:8722 --privileged cloud87/shelltest:latest /cloud87/remote_shell_init -u webdestroya
+	docker run --rm -p 8722:8722 --privileged cloud87/shelltest:latest /cloud87/bin/remote_shell -user webdestroya
 
-go-docker-build:
-	docker build -t c87rsgo:latest -f Dockerfile.golang .
+compile:
+	go build -a -o remote_shell
 
-gobuild:
-	# go build -a remote_shell.go
-	go build -o remote_shell
-
-gotest: gobuild
-	rm -rf tmp
-	mkdir -p tmp
-	./remote_shell -u webdestroya -h tmp
+compile-version:
+	go build -ldflags="-X 'main.Version=v1'" -a -o remote_shell
 
 gomod:
 	go mod tidy
-
-buildssh:
-	go build -a sshtest.go
-
-# sshtest: buildssh
-# 	./sshtest
