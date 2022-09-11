@@ -20,7 +20,7 @@ This will pull your public keys from GitHub and use those for SSH authentication
 | `-grace`  | How long to wait for a connection before we just terminate.<br>Default: `30m` |
 | `-insecure` | If you do not have CA Certificates installed, you can bypass SSL verification.<br>Not Recommended in production<br>Default: `false`
 
-Note: Any of the arguments can be provided using environment variables by prefixing the flag with `C87RS_` (i.e. `C87RS_PORT`)
+> Note: Any of the arguments can be provided using environment variables by prefixing the flag with `C87RS_` (i.e. `C87RS_PORT`)
 
 ## Docker Image Variants
 
@@ -35,10 +35,10 @@ Additionally, images are multi-architecture and are available for the following 
 * `linux/arm64`
 
 
-### `remote-shell:<version>`
+#### `remote-shell:<version>`
 This is the primary image, build on Ubuntu and will be compatible with nearly all Linux flavors.
 
-### `remote-shell:<version>-alpine`
+#### `remote-shell:<version>-alpine`
 This image contains a binary that was built on Alpine Linux. If you are using an Alpine based image, use this variant.
 
 
