@@ -1,10 +1,12 @@
 FROM ubuntu
 
+
+# You don't need to install all this, it's just helpful for debugging
 RUN apt-get update \
   && apt-get install -y --no-install-recommends \
-#    curl \
-#    ca-certificates \
-#    vim \
+    curl \
+    ca-certificates \
+    vim \
     strace \
     \
   && rm -rf /var/lib/apt/lists/*
@@ -12,5 +14,4 @@ RUN apt-get update \
 COPY --from=cloud87/remote-shell:latest /cloud87 /cloud87
 COPY --from=cloud87/remote-shell:latest /cloud87-alpine /cloud87-alpine
 
-# strace -f -F -o logfile -s 300 dropbear -vFE
 

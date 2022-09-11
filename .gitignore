@@ -1,3 +1,6 @@
 remote_shell
 remote-shell
 tryssh.sh
+.DS_Store
+/vendor
+/.vscode

@@ -1,4 +1,4 @@
-module webdestroya/docker-remote-shell
+module webdestroya/remote-shell
 
 go 1.19
 

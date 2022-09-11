@@ -4,7 +4,6 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"time"
@@ -17,12 +16,12 @@ type ghKeyEntry struct {
 	KeyData string `json:"key"`
 }
 
-func exportAuthorizedKeys(options RemoteShellOptions) []gossh.PublicKey {
+func exportAuthorizedKeys(options *RemoteShellOptions) []gossh.PublicKey {
 
-	api_url := fmt.Sprintf("https://api.github.com/users/%s/keys", options.username)
+	ghKeyListUrl := fmt.Sprintf("https://api.github.com/users/%s/keys", options.username)
 
 	log.Println()
-	log.Println("Exporting Authorized Keys from:", api_url)
+	log.Println("Exporting Authorized Keys from:", ghKeyListUrl)
 
 	transCfg := &http.Transport{
 		TLSClientConfig: &tls.Config{
@@ -32,16 +31,16 @@ func exportAuthorizedKeys(options RemoteShellOptions) []gossh.PublicKey {
 
 	githubClient := http.Client{
 		Transport: transCfg,
-		Timeout:   time.Second * 5, // Timeout after 2 seconds
+		Timeout:   time.Second * 15,
 	}
 
-	req, err := http.NewRequest(http.MethodGet, api_url, nil)
+	req, err := http.NewRequest(http.MethodGet, ghKeyListUrl, nil)
 	check(err)
 
-	req.Header.Set("User-Agent", "cloud87-remote-shell")
+	req.Header.Set("User-Agent", fmt.Sprintf("cloud87-remote-shell/%s", buildVersion))
 
-	res, getErr := githubClient.Do(req)
-	check(getErr)
+	res, err := githubClient.Do(req)
+	check(err)
 
 	if res.Body != nil {
 		defer res.Body.Close()
@@ -53,13 +52,10 @@ func exportAuthorizedKeys(options RemoteShellOptions) []gossh.PublicKey {
 		log.Fatalf("Received unexpected status code from Github [%d]\n", res.StatusCode)
 	}
 
-	body, readErr := ioutil.ReadAll(res.Body)
-	check(readErr)
-
 	var ghkeys []ghKeyEntry
 
-	jsonErr := json.Unmarshal(body, &ghkeys)
-	check(jsonErr)
+	err = json.NewDecoder(res.Body).Decode(&ghkeys)
+	check(err)
 
 	var keylist []gossh.PublicKey
 

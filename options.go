@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"os/user"
 	"path/filepath"
 	"time"
 )
@@ -25,6 +26,8 @@ type RemoteShellOptions struct {
 
 	// TODO: should we allow multiple sessions?
 	allowMultipleSessions bool
+
+	currentUser *user.User
 }
 
 func determineDefaultShell() string {
@@ -53,17 +56,17 @@ func parseCommandFlags() RemoteShellOptions {
 	var timeLimitFlag time.Duration
 	var insecureModeFlag bool
 
-	fallbackHomeDir, homeErr := os.UserHomeDir()
-	if homeErr != nil {
+	fallbackHomeDir, err := os.UserHomeDir()
+	if err != nil {
 		fallbackHomeDir = fetchEnvValue("HOME", fetchEnvValue("PWD", "/"))
 	}
 	fallbackUsername := fetchEnvValue("C87RS_USER", "")
 	fallbackShell := fetchEnvValue("C87RS_SHELL", "automatic")
 
 	fallBackPort := fetchEnvValueInt("C87RS_PORT", 8722)
-	fallBackGrace := fetchEnvValueDuration("C87RS_GRACE", 600*time.Second)
+	fallBackGrace := fetchEnvValueDuration("C87RS_GRACE", 30*time.Minute)
 	fallBackIdle := fetchEnvValueDuration("C87RS_IDLETIME", 0*time.Second)
-	fallBackTimeLimit := fetchEnvValueDuration("C87RS_MAXTIME", 43200*time.Second)
+	fallBackTimeLimit := fetchEnvValueDuration("C87RS_MAXTIME", 12*time.Hour)
 
 	flag.StringVar(&usernameFlag, "user", fallbackUsername, "GitHub username")
 	flag.StringVar(&userHomeFlag, "home", fallbackHomeDir, "Home Directory")
@@ -85,9 +88,7 @@ func parseCommandFlags() RemoteShellOptions {
 	}
 
 	if *version {
-		// os.Stderr.WriteString("Cloud87 Remote Shell Version: ")
 		fmt.Printf("%s@%s\n", buildVersion, buildSha)
-		// os.Stderr.WriteString("\n")
 		os.Exit(0)
 	}
 
@@ -95,15 +96,18 @@ func parseCommandFlags() RemoteShellOptions {
 		log.Fatal("You must provide a GitHub username")
 	}
 
-	userHomePath, uHomeErr := filepath.Abs(userHomeFlag)
-	check(uHomeErr)
+	userHomePath, err := filepath.Abs(userHomeFlag)
+	check(err)
 
 	if shellCommandFlag == "automatic" {
 		shellCommandFlag = determineDefaultShell()
 	}
 
-	shellCommand, shellErr := exec.LookPath(shellCommandFlag)
-	check(shellErr)
+	shellCommand, err := exec.LookPath(shellCommandFlag)
+	check(err)
+
+	curUser, err := user.Current()
+	check(err)
 
 	return RemoteShellOptions{
 		username:              usernameFlag,
@@ -115,5 +119,6 @@ func parseCommandFlags() RemoteShellOptions {
 		connectionGrace:       graceFlag,
 		insecureMode:          insecureModeFlag,
 		allowMultipleSessions: false,
+		currentUser:           curUser,
 	}
 }

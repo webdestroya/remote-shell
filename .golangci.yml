@@ -1,0 +1,40 @@
+linters:
+  disable-all: true
+  enable:
+    - bodyclose
+    - errcheck
+    - gofmt
+    - goimports
+    - gosec
+    - gosimple
+    - govet
+    - ineffassign
+    - misspell
+    - prealloc
+    - staticcheck
+    - typecheck
+    - unconvert
+    - unused
+    - asciicheck
+
+issues:
+  exclude:
+    - "Error return value of .((os\\.)?std(out|err)\\..*|.*Close|.*\\.Exit|.*Flush|os\\.Remove(All)?|.*printf?|os\\.(Un)?Setenv|io\\.WriteString|io\\.Copy). is not checked"
+  exclude-rules:
+
+    # Yes, _may_. If they want it.
+    - text: "G402" # G402: TLS InsecureSkipVerify may be true.
+      linters:
+        - gosec
+
+    # It's their system
+    - text: "G204" # G204: Subprocess launched with a potential tainted input or cmd argument
+      linters:
+        - gosec
+
+
+# output configuration options
+output:
+  format: 'colored-line-number'
+  print-issued-lines: true
+  print-linter-name: true
