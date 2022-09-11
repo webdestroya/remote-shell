@@ -6,3 +6,5 @@ Makefile
 README.md
 remote_shell
 tryssh.sh
+Dockerfile.usage
+remote-shell

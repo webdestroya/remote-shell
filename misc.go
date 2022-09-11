@@ -5,6 +5,7 @@ import (
 	"os"
 	"regexp"
 	"strconv"
+	"time"
 )
 
 var envVarFilterRegex *regexp.Regexp
@@ -60,4 +61,17 @@ func fetchEnvValueInt(key string, fallback int) int {
 		return fallback
 	}
 	return intValue
+}
+
+func fetchEnvValueDuration(key string, fallback time.Duration) time.Duration {
+	value, isset := os.LookupEnv(key)
+	if !isset {
+		return fallback
+	}
+
+	durValue, err := time.ParseDuration(value)
+	if err != nil {
+		return fallback
+	}
+	return durValue
 }

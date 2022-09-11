@@ -4,7 +4,10 @@ import (
 	"log"
 )
 
-var Version = "development"
+var (
+	buildVersion = "development"
+	buildSha     = "devel"
+)
 
 func main() {
 
@@ -14,7 +17,7 @@ func main() {
 	log.Println("")
 
 	log.Println("")
-	log.Println("Version:   ", Version)
+	log.Printf("Version: %s@%s\n", buildVersion, buildSha)
 	log.Println("")
 
 	log.Println("GitHubUser:", globalOptions.username)

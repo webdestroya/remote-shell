@@ -38,7 +38,7 @@ func sessionHandler(options RemoteShellOptions, notify chan bool, s ssh.Session)
 	log.Printf("Session ServerVersion: %s\n", s.Context().ServerVersion())
 	log.Printf("Session SessionID: %s\n", s.Context().SessionID())
 
-	io.WriteString(s, fmt.Sprintf("Hello %s\n", s.User()))
+	// io.WriteString(s, fmt.Sprintf("Hello %s\n", s.User()))
 
 	hasConnection = true
 
@@ -48,7 +48,10 @@ func sessionHandler(options RemoteShellOptions, notify chan bool, s ssh.Session)
 	if isPty {
 		log.Println("Starting PTY Session")
 		cmd.Env = filteredEnvironmentVars()
-		cmd.Env = append(cmd.Env, fmt.Sprintf("TERM=%s", ptyReq.Term))
+		cmd.Env = append(cmd.Env,
+			fmt.Sprintf("TERM=%s", ptyReq.Term),
+			fmt.Sprintf("C87RS_SESSIONID=%s", s.Context().SessionID()),
+		)
 		f, err := pty.Start(cmd)
 		if err != nil {
 			panic(err)
@@ -65,6 +68,7 @@ func sessionHandler(options RemoteShellOptions, notify chan bool, s ssh.Session)
 		}()
 
 		io.Copy(s, f) // stdout
+		log.Println("Shell command is running. Waiting for it to end.")
 
 		cmd.Wait()
 	} else {

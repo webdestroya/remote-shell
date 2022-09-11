@@ -10,19 +10,21 @@ import (
 	"time"
 )
 
-const (
-	_defaultGithubUser = "_not_provided_"
-)
-
 type RemoteShellOptions struct {
-	username        string
+	username string
+	port     int
+
 	timeLimit       time.Duration
-	port            int
 	idleTimeout     time.Duration
-	homeDir         string
-	shellCommand    string
 	connectionGrace time.Duration
-	insecureMode    bool
+
+	homeDir      string
+	shellCommand string
+
+	insecureMode bool
+
+	// TODO: should we allow multiple sessions?
+	allowMultipleSessions bool
 }
 
 func determineDefaultShell() string {
@@ -46,30 +48,33 @@ func parseCommandFlags() RemoteShellOptions {
 	var userHomeFlag string
 	var shellCommandFlag string
 	var portFlag int
-	var graceFlag int
-	var idleTimeFlag int
-	var timeLimitFlag int
+	var graceFlag time.Duration
+	var idleTimeFlag time.Duration
+	var timeLimitFlag time.Duration
 	var insecureModeFlag bool
 
 	fallbackHomeDir, homeErr := os.UserHomeDir()
 	if homeErr != nil {
 		fallbackHomeDir = fetchEnvValue("HOME", fetchEnvValue("PWD", "/"))
 	}
-	fallbackUsername := fetchEnvValue("C87_RSHELL_GHUSER", _defaultGithubUser)
-	fallbackShell := fetchEnvValue("C87_RSHELL_SHELL", determineDefaultShell())
+	fallbackUsername := fetchEnvValue("C87RS_USER", "")
+	fallbackShell := fetchEnvValue("C87RS_SHELL", "automatic")
 
-	fallBackPort := fetchEnvValueInt("C87_RSHELL_PORT", 8722)
-	fallBackGrace := fetchEnvValueInt("C87_RSHELL_GRACE", 600)
-	fallBackIdle := fetchEnvValueInt("C87_RSHELL_IDLE_TIMEOUT", 0)
-	fallBackTimeLimit := fetchEnvValueInt("C87_RSHELL_MAX_RUNTIME", 43200)
+	fallBackPort := fetchEnvValueInt("C87RS_PORT", 8722)
+	fallBackGrace := fetchEnvValueDuration("C87RS_GRACE", 600*time.Second)
+	fallBackIdle := fetchEnvValueDuration("C87RS_IDLETIME", 0*time.Second)
+	fallBackTimeLimit := fetchEnvValueDuration("C87RS_MAXTIME", 43200*time.Second)
 
 	flag.StringVar(&usernameFlag, "user", fallbackUsername, "GitHub username")
 	flag.StringVar(&userHomeFlag, "home", fallbackHomeDir, "Home Directory")
 	flag.StringVar(&shellCommandFlag, "shell", fallbackShell, "Shell Command")
+
 	flag.IntVar(&portFlag, "port", fallBackPort, "SSH port to use")
-	flag.IntVar(&graceFlag, "grace", fallBackGrace, "How many seconds to wait for a connection before we assume abandonment")
-	flag.IntVar(&idleTimeFlag, "idletime", fallBackIdle, "Idle timeout")
-	flag.IntVar(&timeLimitFlag, "maxtime", fallBackTimeLimit, "Max session duration")
+
+	flag.DurationVar(&graceFlag, "grace", fallBackGrace, "How many seconds to wait for a connection before we assume abandonment")
+	flag.DurationVar(&idleTimeFlag, "idletime", fallBackIdle, "Idle timeout")
+	flag.DurationVar(&timeLimitFlag, "maxtime", fallBackTimeLimit, "Max session duration")
+
 	flag.BoolVar(&insecureModeFlag, "insecure", false, "Skip SSL verification")
 
 	flag.Parse()
@@ -80,28 +85,35 @@ func parseCommandFlags() RemoteShellOptions {
 	}
 
 	if *version {
-		fmt.Println(Version)
+		// os.Stderr.WriteString("Cloud87 Remote Shell Version: ")
+		fmt.Printf("%s@%s\n", buildVersion, buildSha)
+		// os.Stderr.WriteString("\n")
 		os.Exit(0)
 	}
 
-	if usernameFlag == _defaultGithubUser {
+	if usernameFlag == "" {
 		log.Fatal("You must provide a GitHub username")
 	}
 
 	userHomePath, uHomeErr := filepath.Abs(userHomeFlag)
 	check(uHomeErr)
 
+	if shellCommandFlag == "automatic" {
+		shellCommandFlag = determineDefaultShell()
+	}
+
 	shellCommand, shellErr := exec.LookPath(shellCommandFlag)
 	check(shellErr)
 
 	return RemoteShellOptions{
-		username:        usernameFlag,
-		homeDir:         userHomePath,
-		shellCommand:    shellCommand,
-		port:            portFlag,
-		idleTimeout:     (time.Duration(idleTimeFlag) * time.Second),
-		timeLimit:       (time.Duration(timeLimitFlag) * time.Second),
-		connectionGrace: (time.Duration(graceFlag) * time.Second),
-		insecureMode:    insecureModeFlag,
+		username:              usernameFlag,
+		homeDir:               userHomePath,
+		shellCommand:          shellCommand,
+		port:                  portFlag,
+		idleTimeout:           idleTimeFlag,
+		timeLimit:             timeLimitFlag,
+		connectionGrace:       graceFlag,
+		insecureMode:          insecureModeFlag,
+		allowMultipleSessions: false,
 	}
 }
