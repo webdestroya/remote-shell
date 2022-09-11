@@ -1,0 +1,38 @@
+name: golangci-lint
+on:
+  # push:
+  #   branches:
+  #     - master
+  pull_request:
+    branches:
+      - main
+  # schedule:
+  #   # Trigger every day at 16:00 UTC
+  #   - cron:  '0 16 * * *'
+jobs:
+  golangci-pr:
+    if: github.ref != 'refs/heads/main'
+    name: lint-pr-changes
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-go@v3
+      - uses: actions/checkout@v3
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v3
+        with:
+          version: v1.48.0
+          only-new-issues: true
+          
+  golangci-main:
+    if: github.ref == 'refs/heads/main'
+    name: lint-main-all
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-go@v3
+      - uses: actions/checkout@v3
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v3
+        with:
+          version: v1.48.0
+          only-new-issues: true
+          args: --issues-exit-code=0
