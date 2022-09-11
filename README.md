@@ -12,13 +12,13 @@ This will pull your public keys from GitHub and use those for SSH authentication
 ## Configuration
 | Flag  | Description | 
 | ------------- | ------------- |
-| `-user`  | The GitHub user to pull keys for<br>**Required** | 
-| `-port`  | The remote port for the SSH server<br>Default: `8722` |
-| `-shell`  | The shell command to execute.<br>Default: `/bin/bash` or `/bin/sh` |
-| `-idletime`  | If the connection is idle for more than X seconds, terminate the connection. Setting to `0` disables.<br>Default: `0` (disabled) |
-| `-maxtime`  | Maximum duration of a session.<br>Default: `12h` |
-| `-grace`  | How long to wait for a connection before we just terminate.<br>Default: `30m` |
-| `-insecure` | If you do not have CA Certificates installed, you can bypass SSL verification.<br>Not Recommended in production<br>Default: `false`
+| `user`  | The GitHub user to pull keys for<br>**Required** | 
+| `port`  | The remote port for the SSH server<br>Default: `8722` |
+| `shell`  | The shell command to execute.<br>Default: `/bin/bash` or `/bin/sh` |
+| `idletime`  | If the connection is idle for more than X seconds, terminate the connection. Setting to `0` disables.<br>Default: `0` (disabled) |
+| `maxtime`  | Maximum duration of a session.<br>Default: `12h` |
+| `grace`  | How long to wait for a connection before we just terminate.<br>Default: `30m` |
+| `insecure` | If you do not have CA Certificates installed, you can bypass SSL verification.<br>Not Recommended in production<br>Default: `false`
 
 > Note: Any of the arguments can be provided using environment variables by prefixing the flag with `C87RS_` (i.e. `C87RS_PORT`)
 
@@ -46,7 +46,7 @@ This image contains a binary that was built on Alpine Linux. If you are using an
 
 In your `Dockerfile`:
 
-```docker
+```dockerfile
 FROM anything
 # ... 
 
@@ -57,12 +57,12 @@ COPY --from=ghrc.io/webdestroya/remote-shell:latest /cloud87 /cloud87
 Then you can launch the container:
 
 ```
-$ docker run --rm -p 8722:8722 myapp:latest /cloud87/bin/remote-shell -user your-github-username
+$ docker run -p 8722:8722 myapp:latest /cloud87/bin/remote-shell -user your-github-username
 ```
 
 And connect to it on your client:
 
-```
+```sh
 ssh -p 8722 \
   -o StrictHostKeyChecking=no \
   -o "UserKnownHostsFile=/dev/null" \

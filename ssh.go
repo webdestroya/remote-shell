@@ -55,8 +55,8 @@ func sessionHandler(options *RemoteShellOptions, notify chan bool, s ssh.Session
 		cmd.Env = append(filteredEnvironmentVars(),
 			fmt.Sprintf("TERM=%s", ptyReq.Term),
 			fmt.Sprintf("HOME=%s", options.homeDir),
-			fmt.Sprintf("USER=%s", options.currentUser.Username),
-			fmt.Sprintf("LOGNAME=%s", options.currentUser.Username),
+			fmt.Sprintf("USER=%s", options.currentUserName),
+			fmt.Sprintf("LOGNAME=%s", options.currentUserName),
 			fmt.Sprintf("SHELL=%s", options.shellCommand),
 			fmt.Sprintf("C87RS_SESSIONID=%s", s.Context().SessionID()),
 		)

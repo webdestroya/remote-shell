@@ -11,22 +11,18 @@ on:
   pull_request:
   
 jobs:
-  build:
+  test:
     runs-on: ubuntu-latest
-
-    strategy:
-      matrix:
-        go-version: ['1.19']
 
     steps:
 
       - name: Checkout
         uses: actions/checkout@v3
 
-      - name: Set up Go ${{ matrix.go-version }}
+      - name: Set up Go 1.19
         uses: actions/setup-go@v3
         with:
-          go-version: ${{ matrix.go-version }}
+          go-version: 1.19
           cache: true
 
       - name: Display Go Version
