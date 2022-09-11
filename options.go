@@ -6,7 +6,6 @@ import (
 	"log"
 	"os"
 	"os/exec"
-	"os/user"
 	"path/filepath"
 	"time"
 )
@@ -27,7 +26,7 @@ type RemoteShellOptions struct {
 	// TODO: should we allow multiple sessions?
 	allowMultipleSessions bool
 
-	currentUser *user.User
+	currentUserName string
 }
 
 func determineDefaultShell() string {
@@ -106,8 +105,7 @@ func parseCommandFlags() RemoteShellOptions {
 	shellCommand, err := exec.LookPath(shellCommandFlag)
 	check(err)
 
-	curUser, err := user.Current()
-	check(err)
+	curUserName := fetchEnvValue("USER", fetchEnvValue("LOGNAME", "root"))
 
 	return RemoteShellOptions{
 		username:              usernameFlag,
@@ -119,6 +117,6 @@ func parseCommandFlags() RemoteShellOptions {
 		connectionGrace:       graceFlag,
 		insecureMode:          insecureModeFlag,
 		allowMultipleSessions: false,
-		currentUser:           curUser,
+		currentUserName:       curUserName,
 	}
 }
