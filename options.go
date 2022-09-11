@@ -53,8 +53,8 @@ func parseCommandFlags() RemoteShellOptions {
 	var timeLimitFlag time.Duration
 	var insecureModeFlag bool
 
-	fallbackHomeDir, homeErr := os.UserHomeDir()
-	if homeErr != nil {
+	fallbackHomeDir, err := os.UserHomeDir()
+	if err != nil {
 		fallbackHomeDir = fetchEnvValue("HOME", fetchEnvValue("PWD", "/"))
 	}
 	fallbackUsername := fetchEnvValue("C87RS_USER", "")
@@ -85,9 +85,7 @@ func parseCommandFlags() RemoteShellOptions {
 	}
 
 	if *version {
-		// os.Stderr.WriteString("Cloud87 Remote Shell Version: ")
 		fmt.Printf("%s@%s\n", buildVersion, buildSha)
-		// os.Stderr.WriteString("\n")
 		os.Exit(0)
 	}
 
@@ -95,15 +93,15 @@ func parseCommandFlags() RemoteShellOptions {
 		log.Fatal("You must provide a GitHub username")
 	}
 
-	userHomePath, uHomeErr := filepath.Abs(userHomeFlag)
-	check(uHomeErr)
+	userHomePath, err := filepath.Abs(userHomeFlag)
+	check(err)
 
 	if shellCommandFlag == "automatic" {
 		shellCommandFlag = determineDefaultShell()
 	}
 
-	shellCommand, shellErr := exec.LookPath(shellCommandFlag)
-	check(shellErr)
+	shellCommand, err := exec.LookPath(shellCommandFlag)
+	check(err)
 
 	return RemoteShellOptions{
 		username:              usernameFlag,

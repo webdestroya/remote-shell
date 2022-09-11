@@ -20,6 +20,7 @@ import (
 var hasConnection bool = false
 
 func setWinsize(f *os.File, w, h int) {
+	//nolint:errcheck
 	syscall.Syscall(
 		syscall.SYS_IOCTL,
 		f.Fd(),
@@ -27,21 +28,18 @@ func setWinsize(f *os.File, w, h int) {
 		uintptr(unsafe.Pointer(&struct{ h, w, x, y uint16 }{uint16(h), uint16(w), 0, 0})))
 }
 
+//nolint:errcheck
 func dismissSessionHandler(s ssh.Session) {
 	io.WriteString(s, "This session has already been connected to. You cannot have multiple connections to the same session.\n")
 	s.Exit(1)
 }
 
 func sessionHandler(options *RemoteShellOptions, notify chan bool, s ssh.Session) {
-	// log.Printf("SESSION RAWCOMMAND: %s\n", s.RawCommand())
-	// log.Printf("SESSION SUBSYTEM: %s\n", s.Subsystem())
 	log.Printf("Session User (requested): %s\n", s.User())
 	log.Printf("Session RemoteIP: %s\n", s.RemoteAddr().String())
 	log.Printf("Session ClientVersion: %s\n", s.Context().ClientVersion())
 	log.Printf("Session ServerVersion: %s\n", s.Context().ServerVersion())
 	log.Printf("Session SessionID: %s\n", s.Context().SessionID())
-
-	// io.WriteString(s, fmt.Sprintf("Hello %s\n", s.User()))
 
 	hasConnection = true
 
@@ -54,7 +52,6 @@ func sessionHandler(options *RemoteShellOptions, notify chan bool, s ssh.Session
 		cmd.Env = append(cmd.Env,
 			fmt.Sprintf("TERM=%s", ptyReq.Term),
 			fmt.Sprintf("HOME=%s", options.homeDir),
-			// fmt.Sprintf("HOME=%s", options.homeDir),
 			fmt.Sprintf("C87RS_SESSIONID=%s", s.Context().SessionID()),
 		)
 		f, err := pty.Start(cmd)
@@ -68,14 +65,23 @@ func sessionHandler(options *RemoteShellOptions, notify chan bool, s ssh.Session
 			}
 		}()
 
+		// if these error, then it will abort the session.
+
 		go func() {
 			io.Copy(f, s) // stdin
 		}()
 
 		io.Copy(s, f) // stdout
+
 		log.Println("Shell command is running. Waiting for it to end.")
 
-		cmd.Wait()
+		err = cmd.Wait()
+		if err != nil {
+			log.Println("The requested shell errored out. Are you sure it was correct?")
+			s.Exit(1)
+		} else {
+			s.Exit(0)
+		}
 	} else {
 		log.Println("NoPTY requested")
 		io.WriteString(s, "No PTY requested.\n")
@@ -187,18 +193,12 @@ func startSSHService(options *RemoteShellOptions) {
 		notificationChannel <- true
 	}()
 
-	// err := server.Serve(sock)
-	// if err != nil && err != ssh.ErrServerClosed {
-	// 	log.Fatal(err)
-	// }
-
 	select {
 	case <-time.After(options.timeLimit):
 		log.Println("Reached deadline for service. Dying")
-		check(server.Close())
+		checkNoPanic(server.Close())
 	case <-notificationChannel:
 		log.Println("Death has been requested!")
-		// return
 	}
 
 	// <-notificationChannel
