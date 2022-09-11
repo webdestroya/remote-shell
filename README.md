@@ -18,10 +18,10 @@ FROM ruby:3.1.2
 # ...
 
 # This can go anywhere in your image (to improve caching)
-COPY --from=ghrc.io/webdestroya/docker-remote-shell:v1 /cloud87 /cloud87
+COPY --from=ghrc.io/webdestroya/remote-shell:v1 /cloud87 /cloud87
 
 # For Alpine builds:
-COPY --from=ghrc.io/webdestroya/docker-remote-shell:v1 /cloud87-alpine /cloud87
+COPY --from=ghrc.io/webdestroya/remote-shell:v1 /cloud87-alpine /cloud87
 ```
 
 Then you can launch the container:
