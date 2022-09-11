@@ -20,16 +20,19 @@ import (
 var hasConnection bool = false
 
 func setWinsize(f *os.File, w, h int) {
-	syscall.Syscall(syscall.SYS_IOCTL, f.Fd(), uintptr(syscall.TIOCSWINSZ),
+	syscall.Syscall(
+		syscall.SYS_IOCTL,
+		f.Fd(),
+		uintptr(syscall.TIOCSWINSZ),
 		uintptr(unsafe.Pointer(&struct{ h, w, x, y uint16 }{uint16(h), uint16(w), 0, 0})))
 }
 
-func dismissSessionHandler(options RemoteShellOptions, s ssh.Session) {
+func dismissSessionHandler(s ssh.Session) {
 	io.WriteString(s, "This session has already been connected to. You cannot have multiple connections to the same session.\n")
 	s.Exit(1)
 }
 
-func sessionHandler(options RemoteShellOptions, notify chan bool, s ssh.Session) {
+func sessionHandler(options *RemoteShellOptions, notify chan bool, s ssh.Session) {
 	// log.Printf("SESSION RAWCOMMAND: %s\n", s.RawCommand())
 	// log.Printf("SESSION SUBSYTEM: %s\n", s.Subsystem())
 	log.Printf("Session User (requested): %s\n", s.User())
@@ -50,6 +53,8 @@ func sessionHandler(options RemoteShellOptions, notify chan bool, s ssh.Session)
 		cmd.Env = filteredEnvironmentVars()
 		cmd.Env = append(cmd.Env,
 			fmt.Sprintf("TERM=%s", ptyReq.Term),
+			fmt.Sprintf("HOME=%s", options.homeDir),
+			// fmt.Sprintf("HOME=%s", options.homeDir),
 			fmt.Sprintf("C87RS_SESSIONID=%s", s.Context().SessionID()),
 		)
 		f, err := pty.Start(cmd)
@@ -80,7 +85,7 @@ func sessionHandler(options RemoteShellOptions, notify chan bool, s ssh.Session)
 	notify <- true
 }
 
-func openSSHSocket(options RemoteShellOptions) net.Listener {
+func openSSHSocket(options *RemoteShellOptions) net.Listener {
 	connAddr := fmt.Sprintf(":%d", options.port)
 
 	// lc := net.ListenConfig{
@@ -92,7 +97,7 @@ func openSSHSocket(options RemoteShellOptions) net.Listener {
 	return sock
 }
 
-func startSSHService(options RemoteShellOptions) {
+func startSSHService(options *RemoteShellOptions) {
 	publicKeys := exportAuthorizedKeys(options)
 
 	if len(publicKeys) == 0 {
@@ -106,7 +111,7 @@ func startSSHService(options RemoteShellOptions) {
 	ssh.Handle(func(s ssh.Session) {
 		// log.Println("Handler invoked")
 		if hasConnection {
-			dismissSessionHandler(options, s)
+			dismissSessionHandler(s)
 		} else {
 			sessionHandler(options, notificationChannel, s)
 		}
@@ -124,7 +129,6 @@ func startSSHService(options RemoteShellOptions) {
 
 	serverConfCallback := func(ctx ssh.Context) *gossh.ServerConfig {
 		return &gossh.ServerConfig{
-			// ServerVersion: "SSH-2.0-Cloud87",
 			NoClientAuth: false,
 			BannerCallback: func(conn gossh.ConnMetadata) string {
 				return "You are now connected to Cloud87 Remote Shell instance.\n\n"
@@ -141,7 +145,7 @@ func startSSHService(options RemoteShellOptions) {
 	}
 
 	server := &ssh.Server{
-		Version:                       "Cloud87",
+		Version:                       fmt.Sprintf("Cloud87-%s", buildVersion),
 		PublicKeyHandler:              pubKeyAuthHandle,
 		PasswordHandler:               nil,
 		KeyboardInteractiveHandler:    nil,
@@ -200,8 +204,6 @@ func startSSHService(options RemoteShellOptions) {
 	// <-notificationChannel
 
 	log.Println("End of startSSHService")
-	// log.Fatal(ssh.ListenAndServe(":2222", nil))
-	// log.Fatal(server.ListenAndServe())
 
 }
 

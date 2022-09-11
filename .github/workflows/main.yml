@@ -6,7 +6,9 @@ name: "Main"
 #       - opened
 #       - reopened
 
-on: [push]
+on:
+  workflow_call:
+  pull_request:
   
 jobs:
   build:

@@ -31,5 +31,5 @@ func main() {
 		log.Println("Insecure:  YES!! HTTPS ENDPOINTS WILL NOT BE VERIFIED")
 	}
 
-	startSSHService(globalOptions)
+	startSSHService(&globalOptions)
 }

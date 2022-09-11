@@ -61,9 +61,9 @@ func parseCommandFlags() RemoteShellOptions {
 	fallbackShell := fetchEnvValue("C87RS_SHELL", "automatic")
 
 	fallBackPort := fetchEnvValueInt("C87RS_PORT", 8722)
-	fallBackGrace := fetchEnvValueDuration("C87RS_GRACE", 600*time.Second)
+	fallBackGrace := fetchEnvValueDuration("C87RS_GRACE", 30*time.Minute)
 	fallBackIdle := fetchEnvValueDuration("C87RS_IDLETIME", 0*time.Second)
-	fallBackTimeLimit := fetchEnvValueDuration("C87RS_MAXTIME", 43200*time.Second)
+	fallBackTimeLimit := fetchEnvValueDuration("C87RS_MAXTIME", 12*time.Hour)
 
 	flag.StringVar(&usernameFlag, "user", fallbackUsername, "GitHub username")
 	flag.StringVar(&userHomeFlag, "home", fallbackHomeDir, "Home Directory")

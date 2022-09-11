@@ -17,7 +17,7 @@ type ghKeyEntry struct {
 	KeyData string `json:"key"`
 }
 
-func exportAuthorizedKeys(options RemoteShellOptions) []gossh.PublicKey {
+func exportAuthorizedKeys(options *RemoteShellOptions) []gossh.PublicKey {
 
 	api_url := fmt.Sprintf("https://api.github.com/users/%s/keys", options.username)
 
@@ -32,13 +32,13 @@ func exportAuthorizedKeys(options RemoteShellOptions) []gossh.PublicKey {
 
 	githubClient := http.Client{
 		Transport: transCfg,
-		Timeout:   time.Second * 5, // Timeout after 2 seconds
+		Timeout:   time.Second * 15,
 	}
 
 	req, err := http.NewRequest(http.MethodGet, api_url, nil)
 	check(err)
 
-	req.Header.Set("User-Agent", "cloud87-remote-shell")
+	req.Header.Set("User-Agent", fmt.Sprintf("cloud87-remote-shell/%s", buildVersion))
 
 	res, getErr := githubClient.Do(req)
 	check(getErr)
