@@ -17,9 +17,12 @@ import (
 	gossh "golang.org/x/crypto/ssh"
 )
 
+// has someone connected yet?
 var hasConnection bool = false
 
 func setWinsize(f *os.File, w, h int) {
+	// best effort set the window size
+
 	//nolint:errcheck
 	syscall.Syscall(
 		syscall.SYS_IOCTL,
@@ -48,16 +51,17 @@ func sessionHandler(options *RemoteShellOptions, notify chan bool, s ssh.Session
 	ptyReq, winCh, isPty := s.Pty()
 	if isPty {
 		log.Println("Starting PTY Session")
-		cmd.Env = filteredEnvironmentVars()
-		cmd.Env = append(cmd.Env,
+
+		cmd.Env = append(filteredEnvironmentVars(),
 			fmt.Sprintf("TERM=%s", ptyReq.Term),
 			fmt.Sprintf("HOME=%s", options.homeDir),
+			fmt.Sprintf("USER=%s", options.currentUser.Username),
+			fmt.Sprintf("LOGNAME=%s", options.currentUser.Username),
+			fmt.Sprintf("SHELL=%s", options.shellCommand),
 			fmt.Sprintf("C87RS_SESSIONID=%s", s.Context().SessionID()),
 		)
 		f, err := pty.Start(cmd)
-		if err != nil {
-			panic(err)
-		}
+		check(err)
 
 		go func() {
 			for win := range winCh {
@@ -73,13 +77,14 @@ func sessionHandler(options *RemoteShellOptions, notify chan bool, s ssh.Session
 
 		io.Copy(s, f) // stdout
 
-		log.Println("Shell command is running. Waiting for it to end.")
+		log.Println("Shell command output has ended. Waiting for command to end.")
 
 		err = cmd.Wait()
 		if err != nil {
 			log.Println("The requested shell errored out. Are you sure it was correct?")
 			s.Exit(1)
 		} else {
+			log.Println("Shell command terminated successfully")
 			s.Exit(0)
 		}
 	} else {

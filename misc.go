@@ -11,7 +11,7 @@ import (
 var envVarFilterRegex *regexp.Regexp
 
 func init() {
-	regexp.MustCompile("^(_|DISPLAY|MAIL|USER|TERM|HOME|LOGNAME|SHELL|SHLVL|PWD|SSH_.+)=")
+	envVarFilterRegex = regexp.MustCompile("^(_|DISPLAY|MAIL|USER|TERM|HOME|LOGNAME|SHELL|SHLVL|PWD|SSH_.+)=")
 }
 
 // if we got an error, panic and log it. otherwise do nothing
