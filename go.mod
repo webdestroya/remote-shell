@@ -1,4 +1,4 @@
-module webdestroya/remote-shell
+module github.com/webdestroya/remote-shell
 
 go 1.19
 

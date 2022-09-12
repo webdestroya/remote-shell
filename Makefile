@@ -14,7 +14,8 @@ clean:
 
 .PHONY: compile
 compile: clean
-	go build -a -o remote-shell
+	go build -a -o remote-shell -ldflags="-s -w"
+	stat remote-shell
 
 .PHONY: tidy
 tidy:
