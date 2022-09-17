@@ -42,6 +42,8 @@ Images are multi-architecture and are available for the following platforms:
 
 ## Usage
 
+* [See an example application](example/)
+
 In your `Dockerfile`:
 
 ```dockerfile
@@ -55,7 +57,7 @@ COPY --from=ghrc.io/webdestroya/remote-shell:latest /cloud87 /cloud87
 Then you can launch the container:
 
 ```
-$ docker run -p 8722:8722 myapp:latest /cloud87/bin/remote-shell -user your-github-username
+$ docker run -p 8722:8722 myapp:latest /cloud87/remote-shell -user your-github-username
 ```
 
 And connect to it on your client:

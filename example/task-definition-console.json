@@ -1,7 +1,7 @@
 {
   "containerDefinitions": [{
     "command": [
-      "/cloud87/bin/remote-shell",
+      "/cloud87/remote-shell",
       "-user",
       "your-github-username",
       "-port",
