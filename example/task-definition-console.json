@@ -1,0 +1,38 @@
+{
+  "containerDefinitions": [{
+    "command": [
+      "/cloud87/bin/remote-shell",
+      "-user",
+      "your-github-username",
+      "-port",
+      "8722"
+    ],
+    "essential": true,
+    "image": "012345678910.dkr.ecr.us-east-1.amazonaws.com/myapp:latest",
+    "logConfiguration": {
+      "logDriver": "awslogs",
+      "options": {
+        "awslogs-group": "/ecs/myapp",
+        "awslogs-region": "us-east-1",
+        "awslogs-stream-prefix": "console"
+      }
+    },
+    "name": "console",
+    "portMappings": [{
+      "containerPort": 8722,
+      "hostPort": 8722,
+      "protocol": "tcp"
+    }]
+  }],
+  "cpu": "256",
+  "executionRoleArn": "arn:aws:iam::012345678910:role/ecsTaskExecutionRole",
+  "family": "myapp-console",
+  "memory": "512",
+  "networkMode": "awsvpc",
+  "runtimePlatform": {
+    "operatingSystemFamily": "LINUX"
+  },
+  "requiresCompatibilities": [
+    "FARGATE"
+  ]
+}

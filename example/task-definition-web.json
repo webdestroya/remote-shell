@@ -1,0 +1,34 @@
+{
+  "containerDefinitions": [{
+    "command": [
+      "httpd-foreground"
+    ],
+    "essential": true,
+    "image": "012345678910.dkr.ecr.us-east-1.amazonaws.com/myapp:latest",
+    "logConfiguration": {
+      "logDriver": "awslogs",
+      "options": {
+        "awslogs-group": "/ecs/myapp",
+        "awslogs-region": "us-east-1",
+        "awslogs-stream-prefix": "web"
+      }
+    },
+    "name": "web",
+    "portMappings": [{
+      "containerPort": 80,
+      "hostPort": 80,
+      "protocol": "tcp"
+    }]
+  }],
+  "cpu": "256",
+  "executionRoleArn": "arn:aws:iam::012345678910:role/ecsTaskExecutionRole",
+  "family": "myapp-web",
+  "memory": "512",
+  "networkMode": "awsvpc",
+  "runtimePlatform": {
+    "operatingSystemFamily": "LINUX"
+  },
+  "requiresCompatibilities": [
+    "FARGATE"
+  ]
+}
