@@ -1,18 +1,20 @@
 # Remote SSH Docker Shell
 
-Allows you to connect to a docker instance of your app.
+Allows you to connect to a container running your application. Once you exit the SSH session, the server exits and the container dies.
+
+This is similar to Heroku's one-off `heroku run bash` command. It is not meant to connect to long running containers for your app, but rather an ephemeral instance of your app's image. This program is very similar to AWS ECS Exec, but without the idle timeout or need to install any extra programs on the client. It's pure SSH.
 
 ## Authentication
 This will pull your public keys from GitHub and use those for SSH authentication.
 
 ## Requirements
-* Operating Systems: Debian, Alpine
+* Operating Systems: Linux (both glibc/musl supported)
 * Architectures: AMD64, ARM64
 
 ## Configuration
 | Flag  | Description | 
 | ------------- | ------------- |
-| `user`  | The GitHub user to pull keys for<br>**Required** | 
+| `user`  | The GitHub user to pull keys for<br>**Required unless keys provided via env var** | 
 | `port`  | The remote port for the SSH server<br>Default: `8722` |
 | `shell`  | The shell command to execute.<br>Default: `/bin/bash` or `/bin/sh` |
 | `idletime`  | If the connection is idle for more than X seconds, terminate the connection. Setting to `0` disables.<br>Default: `0` (disabled) |
@@ -22,24 +24,20 @@ This will pull your public keys from GitHub and use those for SSH authentication
 
 > Note: Any of the arguments can be provided using environment variables by prefixing the flag with `C87RS_` (i.e. `C87RS_PORT`)
 
-## Docker Image Variants
+You can also provide a single SSH key via the environment variable: `C87_RSHELL_AUTHORIZED_KEY`. The value is the same format used in a normal authorized key file. (`ssh-rsa XXXXX`)
 
-Each of the variants listed below will have the following scheme for `<version>`:
+## Docker Image
+
+
+#### Tagging Scheme
 * `v#` - updated to the latest version of this major release
 * `v#.#` - updated to the latest version of this minor release
 * `v#.#.#` - will not change, is locked to this specific tag.
 * `latest` - updated to the latest release
 
-Additionally, images are multi-architecture and are available for the following platforms:
+Images are multi-architecture and are available for the following platforms:
 * `linux/amd64`
 * `linux/arm64`
-
-
-#### `remote-shell:<version>`
-This is the primary image, build on Ubuntu and will be compatible with nearly all Linux flavors.
-
-#### `remote-shell:<version>-alpine`
-This image contains a binary that was built on Alpine Linux. If you are using an Alpine based image, use this variant.
 
 
 ## Usage

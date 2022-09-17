@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -108,11 +109,11 @@ func openSSHSocket(options *RemoteShellOptions) net.Listener {
 	return sock
 }
 
-func startSSHService(options *RemoteShellOptions) {
-	publicKeys := exportAuthorizedKeys(options)
+func startSSHService() {
+	publicKeys := exportAuthorizedKeys()
 
 	if len(publicKeys) == 0 {
-		log.Fatalf("The user '%s' does not have any public keys!\n", options.username)
+		panic("No SSH keys were provided")
 	}
 
 	log.Println("Starting SSH Service")
@@ -124,7 +125,7 @@ func startSSHService(options *RemoteShellOptions) {
 		if hasConnection {
 			dismissSessionHandler(s)
 		} else {
-			sessionHandler(options, notificationChannel, s)
+			sessionHandler(&globalOptions, notificationChannel, s)
 		}
 	})
 
@@ -164,27 +165,28 @@ func startSSHService(options *RemoteShellOptions) {
 		ReversePortForwardingCallback: nil,
 		SessionRequestCallback:        sessionRequestCallback,
 		ServerConfigCallback:          serverConfCallback,
-		MaxTimeout:                    options.timeLimit,
-		IdleTimeout:                   options.idleTimeout,
+		MaxTimeout:                    globalOptions.timeLimit,
+		IdleTimeout:                   globalOptions.idleTimeout,
 	}
 
 	log.Println("Creating socket")
-	sock := openSSHSocket(options)
+	sock := openSSHSocket(&globalOptions)
 
 	// boot the server socket
 	go func() {
 		log.Println("Booting SSH Listener")
 		err := server.Serve(sock)
-		if err != nil && err != ssh.ErrServerClosed {
-			log.Fatal(err)
+		// if err != nil && err != ssh.ErrServerClosed {
+		if err != nil && !errors.Is(err, ssh.ErrServerClosed) {
+			panic(err)
 		}
 		log.Println("Serve goroutine ending")
 		notificationChannel <- true
 	}()
 
 	go func() {
-		log.Printf("Starting connection grace timer: %s\n", options.connectionGrace)
-		time.Sleep(options.connectionGrace)
+		log.Printf("Starting connection grace timer: %s\n", globalOptions.connectionGrace)
+		time.Sleep(globalOptions.connectionGrace)
 
 		if hasConnection {
 			log.Println("Server has received a connection within grace period. Not killing self.")
@@ -199,7 +201,7 @@ func startSSHService(options *RemoteShellOptions) {
 	}()
 
 	select {
-	case <-time.After(options.timeLimit):
+	case <-time.After(globalOptions.timeLimit):
 		log.Println("Reached deadline for service. Dying")
 		checkNoPanic(server.Close())
 	case <-notificationChannel:

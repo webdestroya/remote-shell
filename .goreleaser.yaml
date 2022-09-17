@@ -1,0 +1,64 @@
+# This is an example .goreleaser.yml file with some sensible defaults.
+# Make sure to check the documentation at https://goreleaser.com
+
+project_name: remote-shell
+
+before:
+  hooks:
+    - go mod tidy
+builds:
+  - env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+
+    goarch:
+      - amd64
+      - arm64
+
+    id: rshell
+    binary: 'remote-shell'
+    ldflags:
+      - "-s -w -X main.buildVersion={{.Version}} -X main.buildSha={{.Commit}}"
+      # - "-linkmode external -extldflags -static"
+
+
+archives:
+  - files:
+    - none*
+    format: zip
+    id: archivals
+    # name_template: "{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}"
+    format_overrides:
+    - goos: linux
+      format: tar.gz
+
+checksum:
+  name_template: 'checksums.txt'
+snapshot:
+  name_template: "{{ .Version }}"
+release:
+  draft: true
+changelog:
+  skip: true
+  
+announce:
+  skip: true
+
+nfpms:
+  - id: "rshell"
+    builds: ['rshell']
+    recommends:
+      - ca-certificates
+    formats:
+      - deb
+      - rpm
+      - apk
+    vendor: "cloud87.io"
+    license: MIT
+    homepage: "https://github.com/webdestroya/remote-shell/"
+    maintainer: "Mitch Dempsey <webdestroya@noreply.github.com>"
+    description: "Allows easy remote access to containerized applications running on Fargate"
+    # file_name_template: "{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}"
+    rpm:
+      summary: "Allows easy remote access to containerized applications running on Fargate"

@@ -4,3 +4,6 @@ tryssh.sh
 .DS_Store
 /vendor
 /.vscode
+
+.env
+dist/
