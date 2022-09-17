@@ -17,7 +17,7 @@ func init() {
 // if we got an error, panic and log it. otherwise do nothing
 func check(e error) {
 	if e != nil {
-		log.Fatal(e)
+		log.Println(e)
 		panic(e)
 	}
 }

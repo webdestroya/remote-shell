@@ -29,6 +29,14 @@ type RemoteShellOptions struct {
 	currentUserName string
 }
 
+var (
+	globalOptions RemoteShellOptions
+)
+
+func init() {
+	globalOptions = parseCommandFlags()
+}
+
 func determineDefaultShell() string {
 	defaultShells := [5]string{"bash", "sh", "dash", "zsh", "rbash"}
 
@@ -91,7 +99,7 @@ func parseCommandFlags() RemoteShellOptions {
 		os.Exit(0)
 	}
 
-	if usernameFlag == "" {
+	if usernameFlag == "" && !isAuthKeyFromEnv() {
 		log.Fatal("You must provide a GitHub username")
 	}
 

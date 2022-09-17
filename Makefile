@@ -48,3 +48,8 @@ pushtest: build buildtest
 	aws ecr get-login-password | docker login --username AWS --password-stdin $(AWS_ACCOUNTID).dkr.ecr.us-east-1.amazonaws.com
 	docker tag shelltest:latest $(AWS_ACCOUNTID).dkr.ecr.us-east-1.amazonaws.com/cloud87/remote-shell-test:latest
 	docker push $(AWS_ACCOUNTID).dkr.ecr.us-east-1.amazonaws.com/cloud87/remote-shell-test:latest
+
+
+.PHONY: test-release
+test-release:
+	goreleaser release --skip-publish --rm-dist --snapshot --debug

@@ -3,8 +3,8 @@ name: "Release"
 # Only trigger if we changed the files used in the image
 on:
   workflow_dispatch:
-  push:
-    tags: ['v*']
+  # push:
+  #   tags: ['v*']
 
 jobs:
 
@@ -37,12 +37,10 @@ jobs:
           MAJOR_MINOR=${TAG%.*}
           MAJOR_ONLY=${TAG%.*.*}
           SHORT_COMMIT=${GITHUB_SHA::8}
-          DATE=$(date '+%Y-%m-%dT%H:%M:%SZ')
           echo ::set-output name=tag_name::${TAG}
           echo ::set-output name=major_tag::${MAJOR_ONLY}
           echo ::set-output name=major_minor_tag::${MAJOR_MINOR}
           echo ::set-output name=short_commit::${SHORT_COMMIT}
-          echo ::set-output name=date::${DATE}
           if [[ ${{ matrix.target.Dockerfile }} == *"alpine"* ]]; then
             echo ::set-output name=full_tag_name::${TAG}-alpine
             echo ::set-output name=full_major_tag::${MAJOR_ONLY}-alpine

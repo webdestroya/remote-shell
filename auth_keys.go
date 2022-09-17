@@ -6,26 +6,68 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"time"
 
 	gossh "golang.org/x/crypto/ssh"
 )
+
+const sshAuthKeyEnvVar = "C87_RSHELL_AUTHORIZED_KEY"
 
 type ghKeyEntry struct {
 	KeyID   int    `json:"id"`
 	KeyData string `json:"key"`
 }
 
-func exportAuthorizedKeys(options *RemoteShellOptions) []gossh.PublicKey {
+func isAuthKeyFromEnv() bool {
+	return os.Getenv(sshAuthKeyEnvVar) != ""
+}
 
-	ghKeyListUrl := fmt.Sprintf("https://api.github.com/users/%s/keys", options.username)
+func exportAuthorizedKeys() []gossh.PublicKey {
+	var keylist []gossh.PublicKey
+
+	if isAuthKeyFromEnv() {
+		key := exportAuthorizedKeysFromEnv()
+		if key != nil {
+			keylist = append(keylist, key)
+		}
+	}
+
+	if globalOptions.username != "" {
+		ghkeylist := exportAuthorizedKeysFromGitHub()
+		keylist = append(keylist, ghkeylist...)
+	}
+
+	return keylist
+}
+
+func exportAuthorizedKeysFromEnv() gossh.PublicKey {
+
+	log.Println("SSH Key provided via environment variable")
+
+	envKeyValue := os.Getenv(sshAuthKeyEnvVar)
+
+	key, _, _, _, err := gossh.ParseAuthorizedKey([]byte(envKeyValue))
+	if err != nil {
+		log.Printf("Received error when parsing key. Ignoring. err=%s\n", err)
+	} else {
+		fp := gossh.FingerprintSHA256(key)
+		log.Println("Loading Key:", fp)
+		return key
+	}
+	return nil
+}
+
+func exportAuthorizedKeysFromGitHub() []gossh.PublicKey {
+
+	ghKeyListUrl := fmt.Sprintf("https://api.github.com/users/%s/keys", globalOptions.username)
 
 	log.Println()
 	log.Println("Exporting Authorized Keys from:", ghKeyListUrl)
 
 	transCfg := &http.Transport{
 		TLSClientConfig: &tls.Config{
-			InsecureSkipVerify: options.insecureMode,
+			InsecureSkipVerify: globalOptions.insecureMode,
 		},
 	}
 
@@ -47,9 +89,9 @@ func exportAuthorizedKeys(options *RemoteShellOptions) []gossh.PublicKey {
 	}
 
 	if res.StatusCode == 404 {
-		log.Fatalf("The user '%s' does not exist on GitHub\n", options.username)
+		panic(fmt.Sprintf("The user '%s' does not exist on GitHub", globalOptions.username))
 	} else if res.StatusCode != 200 {
-		log.Fatalf("Received unexpected status code from Github [%d]\n", res.StatusCode)
+		panic(fmt.Sprintf("Received unexpected status code from Github [%d]", res.StatusCode))
 	}
 
 	var ghkeys []ghKeyEntry
@@ -66,12 +108,12 @@ func exportAuthorizedKeys(options *RemoteShellOptions) []gossh.PublicKey {
 			log.Printf("Received error when parsing key. Ignoring. keyid=%d err=%s\n", element.KeyID, err)
 		} else {
 			fp := gossh.FingerprintSHA256(key)
-			log.Println("  Loading Key:", fp)
+			log.Println("Loading Key:", fp)
 			keylist = append(keylist, key)
 		}
 	}
 
-	log.Printf("Loaded %d public keys for user '%s'\n", len(keylist), options.username)
+	log.Printf("Loaded %d public keys for user '%s'\n", len(keylist), globalOptions.username)
 
 	return keylist
 
