@@ -19,10 +19,12 @@ jobs:
         id: prepare
         run: |
           TAG=${GITHUB_REF#refs/tags/}
+          RSHELL_VERSION=${GITHUB_REF#refs/tags/v}
           MAJOR_MINOR=${TAG%.*}
           MAJOR_ONLY=${TAG%.*.*}
           SHORT_COMMIT=${GITHUB_SHA::8}
           echo ::set-output name=tag_name::${TAG}
+          echo ::set-output name=rshell_version::${RSHELL_VERSION}
           echo ::set-output name=major_tag::${MAJOR_ONLY}
           echo ::set-output name=major_minor_tag::${MAJOR_MINOR}
           echo ::set-output name=short_commit::${SHORT_COMMIT}
@@ -52,7 +54,7 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: true
           build-args: |
-            RSHELL_VERSION=${{ steps.prepare.outputs.tag_name }}
+            RSHELL_VERSION=${{ steps.prepare.outputs.rshell_version }}
           tags: |
             ghcr.io/${{ github.repository }}:${{ steps.prepare.outputs.full_tag_name }}
             ghcr.io/${{ github.repository }}:${{ steps.prepare.outputs.full_major_tag }}
