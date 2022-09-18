@@ -26,17 +26,10 @@ jobs:
           echo ::set-output name=major_tag::${MAJOR_ONLY}
           echo ::set-output name=major_minor_tag::${MAJOR_MINOR}
           echo ::set-output name=short_commit::${SHORT_COMMIT}
-          if [[ ${{ matrix.target.Dockerfile }} == *"alpine"* ]]; then
-            echo ::set-output name=full_tag_name::${TAG}-alpine
-            echo ::set-output name=full_major_tag::${MAJOR_ONLY}-alpine
-            echo ::set-output name=full_major_minor_tag::${MAJOR_MINOR}-alpine
-            echo ::set-output name=latest_tag::latest-alpine
-          else
-            echo ::set-output name=full_tag_name::${TAG}
-            echo ::set-output name=full_major_tag::${MAJOR_ONLY}
-            echo ::set-output name=full_major_minor_tag::${MAJOR_MINOR}
-            echo ::set-output name=latest_tag::latest
-          fi
+          echo ::set-output name=full_tag_name::${TAG}
+          echo ::set-output name=full_major_tag::${MAJOR_ONLY}
+          echo ::set-output name=full_major_minor_tag::${MAJOR_MINOR}
+          echo ::set-output name=latest_tag::latest
 
       
       - name: Log in to the Container registry
@@ -59,8 +52,7 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: true
           build-args: |
-            BUILD_VERSION=${{ steps.prepare.outputs.tag_name }}
-            BUILD_SHA=${{ steps.prepare.outputs.short_commit }}
+            RSHELL_VERSION=${{ steps.prepare.outputs.tag_name }}
           tags: |
             ghcr.io/${{ github.repository }}:${{ steps.prepare.outputs.full_tag_name }}
             ghcr.io/${{ github.repository }}:${{ steps.prepare.outputs.full_major_tag }}
