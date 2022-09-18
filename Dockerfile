@@ -17,7 +17,7 @@ RUN set -eux; \
   \
   osArch="$(arch | sed s/aarch64/arm64/ | sed s/x86_64/amd64/)"; \
   \
-  wget -O rshell.tar.gz "https://github.com/${GITHUB_REPO}/releases/download/${RSHELL_VERSION}/remote-shell_${RSHELL_VERSION}_linux_${osArch}.tar.gz"; \
+  wget -O rshell.tar.gz "https://github.com/${GITHUB_REPO}/releases/download/v${RSHELL_VERSION}/remote-shell_${RSHELL_VERSION}_linux_${osArch}.tar.gz"; \
   \
   mkdir -p /cloud87; \
   tar -xzf rshell.tar.gz -C /cloud87;\
